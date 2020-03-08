@@ -6,6 +6,27 @@
 
 typedef char* string;
 
+typedef struct  Directory
+{
+    string name;
+    string* sub_dirs;
+
+}Directory;
+
+typedef struct InfoFile
+{
+
+} InfoFile;
+
+typedef struct Zziper
+{
+    int number_of_files;
+    string *files;
+    string path;
+    string file_name;
+
+} Zziper;
+
 string get_string(const char *in)
 {
     string cmd;
@@ -15,19 +36,13 @@ string get_string(const char *in)
     return cmd;
 }
 
-typedef struct Zziper
-{
-    int number_of_files;
-    string *files;
-    string path;
-    string file_name;
-} Zziper;
 
 void Zziper__init (Zziper* self);
 void list_directory(Zziper* self, string dir_name);
 void compress (Zziper* self);
 void decompress (Zziper* self);
 void repr(Zziper* self);
+
 
 void Zziper__init(Zziper* self)
 {
@@ -41,40 +56,49 @@ void list_directory(Zziper* self, string dir_name)
 {
     string file_name;
     DIR *directory;
-    struct dirent *dir_object;
-
     directory = opendir(dir_name);
+    struct dirent *dir_record;
+
     static int i = 0;
     int len = 0;
+    printf("Dir_name: %s\n", dir_name);
+    char path[256];
+    // TODO: свести к string
+    //string path;
     if (directory)
     {
-        while ((dir_object = readdir(directory)) != NULL)
+        while ((dir_record = readdir(directory)) != NULL)
         {
-            if (dir_object->d_type == DT_DIR)
+            if (strcmp(dir_record->d_name, ".") != 0 && strcmp(dir_record->d_name, "..") != 0)
             {
-                if (strcmp(dir_object->d_name, ".") == 0 || strcmp(dir_object->d_name, "..") == 0)
-                    continue;
-                printf("%s %s\n", "New level of recursion:", dir_object->d_name);
-                list_directory(self, dir_object->d_name);
-            }
-            else
-            {
-                file_name = dir_object->d_name;
-                printf("%s %s\n", "Simple file: ", file_name);
-                len = strlen(file_name) + 1;
-                self->files = (string*)realloc(self->files, sizeof(string) * (i + 2));
-                self->files[i] = (string) malloc(len);
+                if (dir_record->d_type == DT_DIR)
+                {
+                    printf("%s %s \n", "New level of recursion:", dir_record->d_name);
+                    strcpy(path, dir_name);
+                    strcat(path, "/");
+                    strcat(path, dir_record->d_name);
+                    list_directory(self, path);
+                }
+                else
+                {
+                    file_name = dir_record->d_name;
+                    len = strlen(file_name) + 1;
+                    self->files = (string*)realloc(self->files, sizeof(string) * (i + 2));
+                    self->files[i] = (string) malloc(len);
 
-                snprintf(self->files[i], len, "%s", file_name);
-                printf("%s %s\n", "Simple file: ", self->files[i]);
-                i++;
-                self->number_of_files ++;
+                    snprintf(self->files[i], len, "%s", file_name);
+                    printf("%s %s\n", "Simple file: ", self->files[i]);
+                    i++;
+                    self->number_of_files ++;
+                }
+
             }
+
+
         }
         closedir(directory);
     }
 }
-
 
 void repr (Zziper* self)
 {
@@ -85,38 +109,15 @@ void repr (Zziper* self)
 
 }
 
-void listdir(string dir_name)
-{
-    DIR* directory;
-    struct dirent *dir_object;
 
-    directory = opendir(dir_name);
-    if (directory)
-    {
-        while ((dir_object = readdir(directory)) != NULL)
-        {
-            if (dir_object->d_type == DT_DIR)
-            {
-                if (strcmp(dir_object->d_name, ".") == 0 || strcmp(dir_object->d_name, "..") == 0)
-                    continue;
-
-               printf("%s %s\n", "New level of recursion:", dir_object->d_name);
-               listdir(dir_object->d_name);
-
-            }
-            else printf("%s %s\n", "Simple file: ", dir_object->d_name);
-
-        }
-        closedir(directory);
-    }
-}
 int main() {
 
     Zziper zip;
     Zziper__init(&zip);
     list_directory(&zip, ".");
     repr(&zip);
+    printf("%d %s\n", zip.number_of_files, " - number of files");
     free(zip.files);
-
+    //listFilesRecursively(".");
 
 }

@@ -54,6 +54,18 @@ void get_info(Zziper* self)
         while ((dir_object = readdir(directory)) != NULL)
         {
             name = dir_object->d_name;
+            if (strcmp(dir_object->d_name, ".") == 0 || strcmp(dir_object->d_name, "..") == 0)
+                continue;
+
+            if (dir_object->d_type == DT_DIR)
+            {
+                printf("%s %d\n", dir_object->d_name, dir_object->d_type);
+            }
+
+            if (dir_object->d_type == DT_DIR)
+            {
+                printf("%s\n", "New level of recursion");
+            }
             len = strlen(name) + 1;
             self->files = (string*)realloc(self->files, sizeof(string) * (i + 2));
             self->files[i] = (string) malloc(len);
@@ -68,23 +80,77 @@ void get_info(Zziper* self)
     }
 }
 
+
 void repr (Zziper* self)
 {
     printf("The list of scanned files", "%s\n");
 
     for (int i=0; i < self->number_of_files; i++)
-    {
         printf("%s\n", self->files[i]);
-    }
 
+}
+
+void listdir(string dir_name)
+{
+    DIR* directory;
+    struct dirent *dir_object;
+
+    directory = opendir(dir_name);
+    if (directory)
+    {
+        while ((dir_object = readdir(directory)) != NULL)
+        {
+            if (dir_object->d_type == DT_DIR)
+            {
+                if (strcmp(dir_object->d_name, ".") == 0 || strcmp(dir_object->d_name, "..") == 0)
+                    continue;
+
+               printf("%s %s\n", "New level of recursion:", dir_object->d_name);
+               listdir(dir_object->d_name);
+
+            }
+            else printf("%s %s\n", "Simple file: ", dir_object->d_name);
+
+        }
+        closedir(directory);
+    }
 }
 int main() {
 
-    Zziper zip;
-    Zziper__init(&zip);
-    get_info(&zip);
-    repr(&zip);
-    free(zip.files);
+//    Zziper zip;
+//    Zziper__init(&zip);
+//    get_info(&zip);
+//    repr(&zip);
+//    free(zip.files);
+
+    listdir(".");
+
+
 
 
 }
+
+//void listdir(const char *dir_name, int indent)
+//{
+//    DIR *directory;
+//    struct dirent *dir_object;
+//
+//    if (!(directory = opendir(dir_name)))
+//        return;
+//
+//    while ((dir_object = readdir(directory)) != NULL) {
+//        if (dir_object->d_type == DT_DIR)
+//        {
+//            char path[1024];
+//            if (strcmp(dir_object->d_name, ".") == 0 || strcmp(dir_object->d_name, "..") == 0)
+//                continue;
+//            snprintf(path, sizeof(path), "%s/%s", dir_name, dir_object->d_name);
+//            printf("%*s[%s]\n", indent, "", dir_object->d_name);
+//            listdir(path, indent + 2);
+//        } else
+//            {
+//            printf("%*s- %s\n", indent, "", dir_object->d_name);
+//            }
+//    }
+//    closedir(directory);
+//}

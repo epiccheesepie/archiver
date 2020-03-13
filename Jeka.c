@@ -38,19 +38,11 @@ void Zziper__init(Zziper* self)
     self->path = NULL;
 }
 
-string concatName(string s1, string s2) {
-    string buf = calloc(strlen(s1) + strlen(s2) + 2, 1);
-    strcat(buf,s1);
-    strcat(buf,"/");
-    strcat(buf,s2);
-    return buf;
-}
-
-string concatPath(string s1, string s2) {
-    string buf = calloc(strlen(s1) + strlen(s2) + 2, 1);
+string concat(string s1, string s2, string s3) {
+    string buf = calloc(strlen(s1) + strlen(s2) + strlen(s3) + 1, 1);
     strcat(buf,s1);
     strcat(buf,s2);
-    strcat(buf,"/");
+    strcat(buf,s3);
     return buf;
 }
 
@@ -61,7 +53,7 @@ void newDir(char* path) {
     strcpy(work,path);
     token = strtok_r(work,"/",&last);
     while(token != NULL) {
-        full = concatPath(full,token);
+        full = concat(full,token,"/");
         //printf("%s\n", full);
         mkdir(full,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         token = strtok_r(NULL, "/", &last);
@@ -71,10 +63,10 @@ void newDir(char* path) {
 void zip_archiver(Zziper* self, string dir_name)
 {
     string file_name; //переменные для директории
-    string name_for_open;
     DIR *directory;
     struct dirent *dir_record;
 
+    string name_for_open;
     int in, out; //переменные для работы с инфофайлом и архивом
     int info;
     long int size = 0;
@@ -114,7 +106,7 @@ void zip_archiver(Zziper* self, string dir_name)
                     self->number_of_files ++;
 
                     out = open("archive.bin",  O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
-                    name_for_open = concatName(dir_name,file_name);
+                    name_for_open = concat(dir_name,"/",file_name);
                     in = open(name_for_open, O_RDONLY);
                     lseek(out,0,SEEK_END);
                     lseek(in,0,SEEK_SET);   
@@ -129,8 +121,7 @@ void zip_archiver(Zziper* self, string dir_name)
                     item.size = size;
                     printf("%s %s\n", "Path of file: ", item.path);
                     printf("%s %s\n", "Name of file: ", item.name);
-                    printf("%s %d\n", "Size of file: ", item.size);
-                    printf("\n");
+                    printf("%s %d\n\n", "Size of file: ", item.size);
                     size = 0;
                     info = open("info.out", O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
                     lseek(info,0,SEEK_END);
@@ -153,24 +144,21 @@ void unzip_archiver(int out, int info) {
 
     fFile item; //объект структуры (файл)
     int in;
-    int buf;
+    void *buf;
     string full_name;
-    long int cnt = 0; //размер
 
     while(read(info,&item,sizeof(fFile)) == sizeof(fFile)) {
+        buf = malloc(item.size);
         newDir(item.path);
-        full_name = concatName(item.path,item.name);
+        full_name = concat(item.path,"/",item.name);
         printf("%s %s\n", "Path of file: ", item.path);
         printf("%s %s\n", "Name of file: ", item.name);
-        printf("%s %d\n", "Size of file: ", item.size);
-        printf("\n");
+        printf("%s %d\n\n", "Size of file: ", item.size);
         in = open(full_name, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
         lseek(in,0,SEEK_SET);
-        while((read(out, &buf, 1) == 1) && cnt != item.size) {
-            write(in, &buf, 1);
-            cnt++;
+        if (read(out,buf,item.size) != -1) {
+            write(in, buf, item.size);
         }
-        cnt = 0;
         close(in);
     }
 }

@@ -1,3 +1,9 @@
+/*
+    Archiver,
+    Created by E., A. and M.
+    2020
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -164,17 +170,20 @@ void unzip_archiver(int out, int info) {
 }
 
 int main() {
-
+/* ///////////////ZIP/////////////// */
     Zziper zip;
     Zziper__init(&zip);
     zip_archiver(&zip, ".");
     printf("%d %s\n", zip.number_of_files, " - number of files");
     free(zip.files);
+/* ///////////////ZIP/////////////// */
 
+/* //////////////UNZIP////////////// */
     /*int out, info;
     out = open("archive.bin", O_RDONLY);
     info = open("info.out", O_RDONLY);
     unzip_archiver(out, info);
     close(out);
     close(info);*/
+/* //////////////UNZIP////////////// */
 }

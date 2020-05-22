@@ -138,7 +138,7 @@ void zip_archiver(Zziper* self, string dir_name)
         				continue;
         			}
                     lseek(out,0,SEEK_END);
-                    lseek(in,0,SEEK_SET);
+                    lseek(in,0,SEEK_SET);   
 
                     while(read(in, &buf, 1) == 1) {
                         write(out, &buf, 1);
@@ -156,6 +156,7 @@ void zip_archiver(Zziper* self, string dir_name)
                     lseek(info,0,SEEK_END);
                     write(info,&item,sizeof(fFile));
 
+                    free(name_for_open);
                     close(info);
                     close(in);
                     close(out);
@@ -194,6 +195,8 @@ void unzip_archiver(int out, int info) {
         if (read(out,buf,item.size) != -1) {
             write(in, buf, item.size);
         }
+        free(full_name);
+        free(buf);
         close(in);
     }
 }
@@ -204,6 +207,9 @@ int main() {
     Zziper__init(&zip);
     zip_archiver(&zip, ".");
     printf("%d %s\n", zip.number_of_files, " - number of files");
+    for (int i=0;i<zip.number_of_files;i++) {
+        free(zip.files[i]);
+    }
     free(zip.files);
 /* ///////////////ZIP/////////////// */
 

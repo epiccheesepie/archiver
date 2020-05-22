@@ -44,9 +44,23 @@ void Zziper__init(Zziper* self)
     self->path = NULL;
 }
 
+/*string create_new_path(string file_name, string dir_name)
+{
+    string path;
+    size_t len = strlen(file_name) + strlen(dir_name) + 1;
+    path = (string) malloc(len);
+    strcpy(path, dir_name);
+    strcat(path, "/");
+    strcat(path, file_name);
+    return path;
+}*/
+
 string concat(string s1, string s2, string s3) {
-    string buf = calloc(strlen(s1) + strlen(s2) + strlen(s3) + 1, 1);
-    strcat(buf,s1);
+    string buf;
+    size_t len = strlen(s1) + strlen(s2) + strlen(s3) + 1;
+    buf = (string) malloc(len);
+
+    strcpy(buf,s1);
     strcat(buf,s2);
     strcat(buf,s3);
     return buf;
@@ -64,6 +78,7 @@ void newDir(char* path) {
         mkdir(full,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         token = strtok_r(NULL, "/", &last);
     }
+    free(full);
 }
 
 void zip_archiver(Zziper* self, string dir_name)
@@ -133,6 +148,7 @@ void zip_archiver(Zziper* self, string dir_name)
                     lseek(info,0,SEEK_END);
                     write(info,&item,sizeof(fFile));
 
+                    free(name_for_open);
                     close(info);
                     close(in);
                     close(out);
@@ -150,12 +166,14 @@ void unzip_archiver(int out, int info) {
 
     fFile item; //объект структуры (файл)
     int in;
-    void *buf;
+    int *buf;
     string full_name;
 
     while(read(info,&item,sizeof(fFile)) == sizeof(fFile)) {
-        buf = malloc(item.size);
-        newDir(item.path);
+        buf = (int*) malloc(item.size);
+        if (item.path != ".") {
+           newDir(item.path);
+        }
         full_name = concat(item.path,"/",item.name);
         printf("%s %s\n", "Path of file: ", item.path);
         printf("%s %s\n", "Name of file: ", item.name);
@@ -165,6 +183,8 @@ void unzip_archiver(int out, int info) {
         if (read(out,buf,item.size) != -1) {
             write(in, buf, item.size);
         }
+        free(full_name);
+        free(buf);
         close(in);
     }
 }
@@ -175,6 +195,9 @@ int main() {
     Zziper__init(&zip);
     zip_archiver(&zip, ".");
     printf("%d %s\n", zip.number_of_files, " - number of files");
+    for (int i=0;i<zip.number_of_files;i++) {
+        free(zip.files[i]);
+    }
     free(zip.files);
 /* ///////////////ZIP/////////////// */
 

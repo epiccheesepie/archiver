@@ -127,10 +127,18 @@ void zip_archiver(Zziper* self, string dir_name)
                     self->number_of_files ++;
 
                     out = open("archive.bin",  O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
+                    if (out == -1) {
+        				printf("%s\n", "Error 154: archiver could not be opened");
+        				exit(0);
+        			}
                     name_for_open = concat(dir_name,"/",file_name);
                     in = open(name_for_open, O_RDONLY);
+       				if (in == -1) {
+        				printf("%s\n", "Error 155: file could not be opened");
+        				continue;
+        			}
                     lseek(out,0,SEEK_END);
-                    lseek(in,0,SEEK_SET);   
+                    lseek(in,0,SEEK_SET);
 
                     while(read(in, &buf, 1) == 1) {
                         write(out, &buf, 1);
@@ -160,7 +168,7 @@ void zip_archiver(Zziper* self, string dir_name)
         }
         closedir(directory);
     }
-} 
+}
 
 void unzip_archiver(int out, int info) {
 
@@ -179,6 +187,10 @@ void unzip_archiver(int out, int info) {
         printf("%s %s\n", "Name of file: ", item.name);
         printf("%s %d\n\n", "Size of file: ", item.size);
         in = open(full_name, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
+        if (in == -1) {
+        	printf("%s\n", "Error 155: file could not be opened");
+        	continue;
+        }
         lseek(in,0,SEEK_SET);
         if (read(out,buf,item.size) != -1) {
             write(in, buf, item.size);
